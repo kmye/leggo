@@ -1,0 +1,2 @@
+-- Seed data for local development
+-- Add any seed data here that you want to populate in your local database
