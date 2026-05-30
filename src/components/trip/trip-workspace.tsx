@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { Loader2 } from "lucide-react";
 import { useTrip } from "@/hooks/use-trip";
 import { useStops } from "@/hooks/use-stops";
 import { TripHeader } from "./trip-header";
@@ -138,7 +139,11 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     await removeDay(dayId);
   };
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center">
+      <Loader2 className="size-10 animate-spin text-muted-foreground" />
+    </div>
+  );
   if (!trip) return <div className="p-8 text-center">Trip not found.</div>;
 
   return (

@@ -115,11 +115,11 @@ export function StopDrawer({ stop, open, onClose, onSave, onDelete, tripId, onPh
             <Input id="stop-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2" data-vaul-no-drag>
             <Label>Category</Label>
             <Select value={category} onValueChange={(v) => setCategory(v as StopCategory)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[100]">
                 <SelectItem value="food">Food</SelectItem>
                 <SelectItem value="sightseeing">Sightseeing</SelectItem>
                 <SelectItem value="hotel">Hotel</SelectItem>
