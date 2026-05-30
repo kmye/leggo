@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -11,10 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ShareDialog } from "./share-dialog";
-import type { Trip, TripStatus } from "@/lib/types";
+import type { Trip, TripStatus, TripWithDays } from "@/lib/types";
 
 interface TripHeaderProps {
   trip: Trip;
+  onUpdateTrip: (updates: Partial<TripWithDays>) => Promise<{ error: any }>;
   onUpdateStatus: (status: TripStatus) => Promise<{ error: any }>;
   onGenerateShare: () => Promise<{ token: string | undefined; error: any }>;
   onRevokeShare: () => Promise<{ error: any }>;
@@ -22,12 +24,49 @@ interface TripHeaderProps {
 
 export function TripHeader({
   trip,
+  onUpdateTrip,
   onUpdateStatus,
   onGenerateShare,
   onRevokeShare,
 }: TripHeaderProps) {
   const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [title, setTitle] = useState(trip.title);
+  const [description, setDescription] = useState(trip.description);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const descInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTitle(trip.title);
+    setDescription(trip.description);
+  }, [trip.title, trip.description]);
+
+  useEffect(() => {
+    if (editingTitle) titleInputRef.current?.focus();
+  }, [editingTitle]);
+
+  useEffect(() => {
+    if (editingDescription) descInputRef.current?.focus();
+  }, [editingDescription]);
+
+  const saveTitle = () => {
+    setEditingTitle(false);
+    const trimmed = title.trim();
+    if (trimmed && trimmed !== trip.title) {
+      onUpdateTrip({ title: trimmed });
+    } else {
+      setTitle(trip.title);
+    }
+  };
+
+  const saveDescription = () => {
+    setEditingDescription(false);
+    if (description !== trip.description) {
+      onUpdateTrip({ description });
+    }
+  };
 
   return (
     <>
@@ -36,7 +75,27 @@ export function TripHeader({
           <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard")}>
             Back
           </Button>
-          <h1 className="text-lg font-semibold">{trip.title}</h1>
+          {editingTitle ? (
+            <Input
+              ref={titleInputRef}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={saveTitle}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveTitle();
+                if (e.key === "Escape") { setTitle(trip.title); setEditingTitle(false); }
+              }}
+              className="h-8 text-lg font-semibold w-64"
+            />
+          ) : (
+            <h1
+              className="text-lg font-semibold cursor-pointer hover:text-primary/80 transition-colors"
+              onClick={() => setEditingTitle(true)}
+              title="Click to edit"
+            >
+              {trip.title}
+            </h1>
+          )}
           <Select
             value={trip.status}
             onValueChange={(v) => onUpdateStatus(v as TripStatus)}
@@ -55,6 +114,32 @@ export function TripHeader({
           Share
         </Button>
       </div>
+      {editingDescription ? (
+        <div className="px-4 py-1 border-b">
+          <Input
+            ref={descInputRef}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={saveDescription}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveDescription();
+              if (e.key === "Escape") { setDescription(trip.description); setEditingDescription(false); }
+            }}
+            placeholder="Add a trip description..."
+            className="h-7 text-sm text-muted-foreground border-none shadow-none px-0 focus-visible:ring-0"
+          />
+        </div>
+      ) : (
+        <div
+          className="px-4 py-1 border-b cursor-pointer hover:bg-muted/30 transition-colors"
+          onClick={() => setEditingDescription(true)}
+          title="Click to edit description"
+        >
+          <p className="text-sm text-muted-foreground">
+            {trip.description || "Add a trip description..."}
+          </p>
+        </div>
+      )}
       <ShareDialog
         open={shareOpen}
         onClose={() => setShareOpen(false)}

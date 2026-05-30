@@ -19,7 +19,7 @@ interface PlaceData {
 }
 
 export function TripWorkspace({ tripId }: { tripId: string }) {
-  const { trip, loading, refetch, updateStatus, addDay, removeDay, generateShareToken, revokeShareToken } = useTrip(tripId);
+  const { trip, loading, refetch, updateTrip, updateStatus, addDay, removeDay, generateShareToken, revokeShareToken } = useTrip(tripId);
   const { addStop, updateStop, deleteStop, reorderStops } = useStops();
 
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
@@ -145,6 +145,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     <div className="h-screen flex flex-col">
       <TripHeader
         trip={trip}
+        onUpdateTrip={updateTrip}
         onUpdateStatus={updateStatus}
         onGenerateShare={generateShareToken}
         onRevokeShare={revokeShareToken}
