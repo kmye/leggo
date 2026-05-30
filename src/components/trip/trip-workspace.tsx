@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTrip } from "@/hooks/use-trip";
 import { useStops } from "@/hooks/use-stops";
 import { TripHeader } from "./trip-header";
@@ -10,6 +10,14 @@ import { AddStopDialog } from "./add-stop-dialog";
 import { MapContainer } from "@/components/map/map-container";
 import type { StopWithPhotos } from "@/lib/types";
 
+interface PlaceData {
+  name: string;
+  latitude: number;
+  longitude: number;
+  countryCode: string;
+  formattedAddress: string;
+}
+
 export function TripWorkspace({ tripId }: { tripId: string }) {
   const { trip, loading, refetch, updateStatus, addDay, removeDay, generateShareToken, revokeShareToken } = useTrip(tripId);
   const { addStop, updateStop, deleteStop, reorderStops } = useStops();
@@ -18,7 +26,8 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addStopOpen, setAddStopOpen] = useState(false);
   const [addStopDayId, setAddStopDayId] = useState<string | null>(null);
-  const [mapClickCoords, setMapClickCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapClickPlace, setMapClickPlace] = useState<PlaceData | null>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
   const allStops: StopWithPhotos[] = trip?.trip_days.flatMap((d) => d.stops) || [];
 
@@ -29,17 +38,53 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     setDrawerOpen(true);
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    if (trip && trip.trip_days.length > 0) {
-      setMapClickCoords({ lat, lng });
-      setAddStopDayId(trip.trip_days[trip.trip_days.length - 1].id);
-      setAddStopOpen(true);
+  const handleMapClick = async (lat: number, lng: number) => {
+    if (!trip || trip.trip_days.length === 0) return;
+
+    if (!geocoderRef.current && typeof google !== "undefined") {
+      geocoderRef.current = new google.maps.Geocoder();
     }
+
+    let placeData: PlaceData = {
+      name: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+      latitude: lat,
+      longitude: lng,
+      countryCode: "",
+      formattedAddress: "",
+    };
+
+    if (geocoderRef.current) {
+      try {
+        const response = await geocoderRef.current.geocode({ location: { lat, lng } });
+        if (response.results && response.results.length > 0) {
+          const result = response.results[0];
+          const countryComponent = result.address_components.find(
+            (c) => c.types.includes("country")
+          );
+          const nameComponent = result.address_components.find(
+            (c) => c.types.includes("point_of_interest") || c.types.includes("premise")
+          );
+          placeData = {
+            name: nameComponent?.long_name || result.address_components[0]?.long_name || placeData.name,
+            latitude: lat,
+            longitude: lng,
+            countryCode: countryComponent?.short_name || "",
+            formattedAddress: result.formatted_address,
+          };
+        }
+      } catch {
+        // Use fallback placeData with raw coords
+      }
+    }
+
+    setMapClickPlace(placeData);
+    setAddStopDayId(trip.trip_days[trip.trip_days.length - 1].id);
+    setAddStopOpen(true);
   };
 
   const handleAddStopButton = (dayId: string) => {
     setAddStopDayId(dayId);
-    setMapClickCoords(null);
+    setMapClickPlace(null);
     setAddStopOpen(true);
   };
 
@@ -49,6 +94,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     longitude: number;
     country_code: string;
     category: any;
+    notes: string;
   }) => {
     if (!addStopDayId || !trip) return;
     const day = trip.trip_days.find((d) => d.id === addStopDayId);
@@ -59,7 +105,6 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
       order_index: orderIndex,
       time_start: null,
       time_end: null,
-      notes: "",
       estimated_budget: null,
       currency: "CNY",
       links: [],
@@ -105,7 +150,6 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
         onRevokeShare={revokeShareToken}
       />
       <div className="flex-1 flex overflow-hidden">
-        {/* Itinerary Panel */}
         <div className="w-[380px] border-r overflow-hidden flex-shrink-0 hidden md:block">
           <ItineraryPanel
             days={trip.trip_days}
@@ -118,7 +162,6 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
           />
         </div>
 
-        {/* Map */}
         <div className="flex-1">
           <MapContainer
             stops={allStops}
@@ -129,7 +172,6 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
         </div>
       </div>
 
-      {/* Mobile: Itinerary below map */}
       <div className="md:hidden border-t max-h-[40vh] overflow-y-auto">
         <ItineraryPanel
           days={trip.trip_days}
@@ -156,7 +198,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
         open={addStopOpen}
         onClose={() => setAddStopOpen(false)}
         onAdd={handleAddStop}
-        initialCoords={mapClickCoords}
+        initialPlace={mapClickPlace}
       />
     </div>
   );
