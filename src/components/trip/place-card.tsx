@@ -69,7 +69,7 @@ export function PlaceCard({ place, days, onAddToDay }: PlaceCardProps) {
       </div>
 
       {adding ? (
-        <Select onValueChange={handleAdd}>
+        <Select onValueChange={(v: string | null) => { if (v) handleAdd(v); }}>
           <SelectTrigger className="h-7 text-xs">
             <SelectValue placeholder="Select day..." />
           </SelectTrigger>
