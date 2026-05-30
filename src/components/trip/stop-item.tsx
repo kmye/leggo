@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { StopWithPhotos, StopCategory } from "@/lib/types";
 
@@ -44,13 +45,20 @@ export function StopItem({ stop, index, isSelected, onClick }: StopItemProps) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      onClick={onClick}
       className={`p-3 rounded-md border cursor-pointer transition-colors ${
         isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
       }`}
+      onClick={onClick}
     >
       <div className="flex items-start gap-2">
+        <button
+          type="button"
+          className="flex-shrink-0 touch-none cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium">
           {index + 1}
         </span>
