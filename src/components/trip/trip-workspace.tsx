@@ -8,7 +8,7 @@ import { ItineraryPanel } from "./itinerary-panel";
 import { StopDrawer } from "./stop-drawer";
 import { AddStopDialog } from "./add-stop-dialog";
 import { MapContainer } from "@/components/map/map-container";
-import type { StopWithPhotos } from "@/lib/types";
+import type { StopWithPhotos, StopCategory } from "@/lib/types";
 
 interface PlaceData {
   name: string;
@@ -93,7 +93,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     latitude: number;
     longitude: number;
     country_code: string;
-    category: any;
+    category: StopCategory;
     notes: string;
   }) => {
     if (!addStopDayId || !trip) return;
@@ -196,7 +196,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
 
       <AddStopDialog
         open={addStopOpen}
-        onClose={() => setAddStopOpen(false)}
+        onClose={() => { setAddStopOpen(false); setMapClickPlace(null); }}
         onAdd={handleAddStop}
         initialPlace={mapClickPlace}
       />

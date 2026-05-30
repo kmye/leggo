@@ -25,13 +25,13 @@ export function PlacesAutocomplete({ onPlaceSelect, initialValue = "" }: PlacesA
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (typeof google !== "undefined" && google.maps?.places) {
+  const ensureServices = () => {
+    if (!autocompleteServiceRef.current && typeof google !== "undefined" && google.maps?.places) {
       autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
       const div = document.createElement("div");
       placesServiceRef.current = new google.maps.places.PlacesService(div);
     }
-  }, []);
+  };
 
   useEffect(() => {
     setInputValue(initialValue);
@@ -47,7 +47,12 @@ export function PlacesAutocomplete({ onPlaceSelect, initialValue = "" }: PlacesA
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, []);
+
   const fetchSuggestions = useCallback((input: string) => {
+    ensureServices();
     if (!autocompleteServiceRef.current || input.length < 2) {
       setSuggestions([]);
       return;
@@ -72,6 +77,7 @@ export function PlacesAutocomplete({ onPlaceSelect, initialValue = "" }: PlacesA
   };
 
   const handleSelect = (prediction: google.maps.places.AutocompletePrediction) => {
+    ensureServices();
     if (!placesServiceRef.current) return;
 
     placesServiceRef.current.getDetails(
