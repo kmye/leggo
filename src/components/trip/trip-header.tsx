@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -72,8 +73,8 @@ export function TripHeader({
     <>
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard")}>
-            Back
+          <Button variant="ghost" size="icon" className="size-8" onClick={() => router.push("/dashboard")}>
+            <ChevronLeft className="size-5" />
           </Button>
           {editingTitle ? (
             <Input
