@@ -1,13 +1,15 @@
 "use client";
 
 import { GoogleMapView } from "./google-map";
-import type { StopWithPhotos } from "@/lib/types";
+import type { StopWithPhotos, PlaceResult } from "@/lib/types";
 
 interface MapContainerProps {
   stops: StopWithPhotos[];
   selectedStopId: string | null;
   onStopClick: (stopId: string) => void;
   onMapClick: (lat: number, lng: number) => void;
+  poiMarkers?: PlaceResult[];
+  showPoiMarkers?: boolean;
 }
 
 export function MapContainer({
@@ -15,6 +17,8 @@ export function MapContainer({
   selectedStopId,
   onStopClick,
   onMapClick,
+  poiMarkers,
+  showPoiMarkers,
 }: MapContainerProps) {
   return (
     <div className="relative w-full h-full">
@@ -23,6 +27,8 @@ export function MapContainer({
         selectedStopId={selectedStopId}
         onStopClick={onStopClick}
         onMapClick={onMapClick}
+        poiMarkers={poiMarkers}
+        showPoiMarkers={showPoiMarkers}
       />
     </div>
   );

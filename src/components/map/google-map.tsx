@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useEffect } from "react";
 import { GoogleMap, useJsApiLoader, Marker, Polyline } from "@react-google-maps/api";
-import type { StopWithPhotos, StopCategory } from "@/lib/types";
+import type { StopWithPhotos, StopCategory, PlaceResult } from "@/lib/types";
 
 const categoryColors: Record<StopCategory, string> = {
   food: "#ef4444",
@@ -27,6 +27,8 @@ interface GoogleMapViewProps {
   selectedStopId: string | null;
   onStopClick: (stopId: string) => void;
   onMapClick: (lat: number, lng: number) => void;
+  poiMarkers?: PlaceResult[];
+  showPoiMarkers?: boolean;
 }
 
 export function GoogleMapView({
@@ -34,6 +36,8 @@ export function GoogleMapView({
   selectedStopId,
   onStopClick,
   onMapClick,
+  poiMarkers = [],
+  showPoiMarkers = false,
 }: GoogleMapViewProps) {
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -117,6 +121,22 @@ export function GoogleMapView({
           }}
         />
       )}
+
+      {showPoiMarkers && poiMarkers.map((poi) => (
+        <Marker
+          key={poi.place_id}
+          position={{ lat: poi.lat, lng: poi.lng }}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#9ca3af",
+            fillOpacity: 0.5,
+            strokeColor: "#6b7280",
+            strokeWeight: 1.5,
+          }}
+          title={poi.name}
+        />
+      ))}
     </GoogleMap>
   );
 }
