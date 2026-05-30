@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Compass, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ShareDialog } from "./share-dialog";
-import type { Trip, TripStatus, TripWithDays } from "@/lib/types";
+import { PresenceAvatars } from "./presence-avatars";
+import type { Trip, TripStatus, TripWithDays, PresenceMember } from "@/lib/types";
 
 interface TripHeaderProps {
   trip: Trip;
@@ -21,6 +22,9 @@ interface TripHeaderProps {
   onUpdateStatus: (status: TripStatus) => Promise<{ error: any }>;
   onGenerateShare: () => Promise<{ token: string | undefined; error: any }>;
   onRevokeShare: () => Promise<{ error: any }>;
+  onlineMembers: PresenceMember[];
+  onOpenMembers: () => void;
+  onOpenDiscovery: () => void;
 }
 
 export function TripHeader({
@@ -29,6 +33,9 @@ export function TripHeader({
   onUpdateStatus,
   onGenerateShare,
   onRevokeShare,
+  onlineMembers,
+  onOpenMembers,
+  onOpenDiscovery,
 }: TripHeaderProps) {
   const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
@@ -111,9 +118,18 @@ export function TripHeader({
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-          Share
-        </Button>
+        <div className="flex items-center gap-2">
+          <PresenceAvatars members={onlineMembers} />
+          <Button variant="ghost" size="icon" className="size-8" onClick={onOpenDiscovery} title="Discover places">
+            <Compass className="size-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="size-8" onClick={onOpenMembers} title="Members">
+            <Users className="size-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
+            Share
+          </Button>
+        </div>
       </div>
       {editingDescription ? (
         <div className="px-4 py-1 border-b">

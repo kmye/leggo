@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import { useTrip } from "@/hooks/use-trip";
+import { useRealtimeTrip } from "@/hooks/use-realtime-trip";
 import { useStops } from "@/hooks/use-stops";
 import { TripHeader } from "./trip-header";
 import { ItineraryPanel } from "./itinerary-panel";
 import { StopDrawer } from "./stop-drawer";
 import { AddStopDialog } from "./add-stop-dialog";
+import { DiscoveryPanel } from "./discovery-panel";
+import { MembersPanel } from "./members-panel";
 import { MapContainer } from "@/components/map/map-container";
-import type { StopWithPhotos, StopCategory } from "@/lib/types";
+import type { StopWithPhotos, StopCategory, PlaceResult } from "@/lib/types";
 
 interface PlaceData {
   name: string;
@@ -19,8 +21,14 @@ interface PlaceData {
   formattedAddress: string;
 }
 
-export function TripWorkspace({ tripId }: { tripId: string }) {
-  const { trip, loading, refetch, updateTrip, updateStatus, addDay, removeDay, generateShareToken, revokeShareToken } = useTrip(tripId);
+interface TripWorkspaceProps {
+  tripId: string;
+  currentUser: { id: string; name: string; avatar_url: string | null };
+  isOwner: boolean;
+}
+
+export function TripWorkspace({ tripId, currentUser, isOwner }: TripWorkspaceProps) {
+  const { trip, loading, refetch, updateTrip, updateStatus, addDay, removeDay, generateShareToken, revokeShareToken, onlineMembers, updatePresenceStop } = useRealtimeTrip(tripId, currentUser);
   const { addStop, updateStop, deleteStop, reorderStops } = useStops();
 
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
@@ -28,15 +36,32 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
   const [addStopOpen, setAddStopOpen] = useState(false);
   const [addStopDayId, setAddStopDayId] = useState<string | null>(null);
   const [mapClickPlace, setMapClickPlace] = useState<PlaceData | null>(null);
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [showPoiOnMap, setShowPoiOnMap] = useState(true);
+  const [poiMarkers, setPoiMarkers] = useState<PlaceResult[]>([]);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
   const allStops: StopWithPhotos[] = trip?.trip_days.flatMap((d) => d.stops) || [];
 
   const selectedStop = allStops.find((s) => s.id === selectedStopId) || null;
 
+  const searchCenter = useMemo(() => {
+    if (allStops.length > 0) {
+      const avgLat = allStops.reduce((sum, s) => sum + s.latitude, 0) / allStops.length;
+      const avgLng = allStops.reduce((sum, s) => sum + s.longitude, 0) / allStops.length;
+      return { lat: avgLat, lng: avgLng };
+    }
+    if (trip?.destination_lat && trip?.destination_lng) {
+      return { lat: trip.destination_lat, lng: trip.destination_lng };
+    }
+    return null;
+  }, [allStops, trip?.destination_lat, trip?.destination_lng]);
+
   const handleStopClick = (stopId: string) => {
     setSelectedStopId(stopId);
     setDrawerOpen(true);
+    updatePresenceStop(stopId);
   };
 
   const handleMapClick = async (lat: number, lng: number) => {
@@ -115,6 +140,29 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     refetch();
   };
 
+  const handleAddPlace = async (place: PlaceResult, dayId: string, category: StopCategory) => {
+    const day = trip?.trip_days.find((d) => d.id === dayId);
+    const orderIndex = day ? day.stops.length : 0;
+
+    await addStop(dayId, {
+      name: place.name,
+      latitude: place.lat,
+      longitude: place.lng,
+      country_code: "",
+      category,
+      order_index: orderIndex,
+      time_start: null,
+      time_end: null,
+      notes: place.address,
+      estimated_budget: null,
+      currency: "CNY",
+      links: [],
+      booking_references: [],
+      custom_fields: [],
+    });
+    refetch();
+  };
+
   const handleSaveStop = async (stopId: string, updates: Partial<StopWithPhotos>) => {
     await updateStop(stopId, updates);
     refetch();
@@ -139,6 +187,11 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     await removeDay(dayId);
   };
 
+  const handleDrawerClose = () => {
+    setDrawerOpen(false);
+    updatePresenceStop(null);
+  };
+
   if (loading) return (
     <div className="h-screen flex items-center justify-center">
       <Loader2 className="size-10 animate-spin text-muted-foreground" />
@@ -154,18 +207,33 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
         onUpdateStatus={updateStatus}
         onGenerateShare={generateShareToken}
         onRevokeShare={revokeShareToken}
+        onlineMembers={onlineMembers}
+        onOpenMembers={() => setMembersOpen(true)}
+        onOpenDiscovery={() => setDiscoveryOpen(true)}
       />
       <div className="flex-1 flex overflow-hidden">
         <div className="w-[380px] border-r overflow-hidden flex-shrink-0 hidden md:block">
-          <ItineraryPanel
-            days={trip.trip_days}
-            selectedStopId={selectedStopId}
-            onStopClick={handleStopClick}
-            onAddStop={handleAddStopButton}
-            onAddDay={handleAddDay}
-            onRemoveDay={handleRemoveDay}
-            onReorderStops={handleReorderStops}
-          />
+          {discoveryOpen ? (
+            <DiscoveryPanel
+              days={trip.trip_days}
+              searchCenter={searchCenter}
+              onAddPlace={handleAddPlace}
+              onClose={() => { setDiscoveryOpen(false); setPoiMarkers([]); }}
+              showOnMap={showPoiOnMap}
+              onToggleShowOnMap={() => setShowPoiOnMap((v) => !v)}
+              onPlacesLoaded={setPoiMarkers}
+            />
+          ) : (
+            <ItineraryPanel
+              days={trip.trip_days}
+              selectedStopId={selectedStopId}
+              onStopClick={handleStopClick}
+              onAddStop={handleAddStopButton}
+              onAddDay={handleAddDay}
+              onRemoveDay={handleRemoveDay}
+              onReorderStops={handleReorderStops}
+            />
+          )}
         </div>
 
         <div className="flex-1">
@@ -174,6 +242,8 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
             selectedStopId={selectedStopId}
             onStopClick={handleStopClick}
             onMapClick={handleMapClick}
+            poiMarkers={discoveryOpen ? poiMarkers : undefined}
+            showPoiMarkers={discoveryOpen && showPoiOnMap}
           />
         </div>
       </div>
@@ -193,7 +263,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
       <StopDrawer
         stop={selectedStop}
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={handleDrawerClose}
         onSave={handleSaveStop}
         onDelete={handleDeleteStop}
         tripId={tripId}
@@ -205,6 +275,13 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
         onClose={() => { setAddStopOpen(false); setMapClickPlace(null); }}
         onAdd={handleAddStop}
         initialPlace={mapClickPlace}
+      />
+
+      <MembersPanel
+        open={membersOpen}
+        onClose={() => setMembersOpen(false)}
+        tripId={tripId}
+        isOwner={isOwner}
       />
     </div>
   );
