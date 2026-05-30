@@ -20,6 +20,8 @@ const containerStyle = {
 
 const defaultCenter = { lat: 35.0, lng: 104.0 };
 
+const LIBRARIES: ("places")[] = ["places"];
+
 interface GoogleMapViewProps {
   stops: StopWithPhotos[];
   selectedStopId: string | null;
@@ -36,6 +38,7 @@ export function GoogleMapView({
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    libraries: LIBRARIES,
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
