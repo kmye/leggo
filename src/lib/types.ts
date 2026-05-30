@@ -18,6 +18,9 @@ export interface Trip {
   status: TripStatus;
   cover_image_url: string | null;
   share_token: string | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
+  destination_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -92,4 +95,46 @@ export interface StopPhoto {
   caption: string | null;
   order_index: number;
   uploaded_at: string;
+}
+
+export type InviteStatus = "pending" | "accepted" | "revoked";
+
+export interface TripInvite {
+  id: string;
+  trip_id: string;
+  inviter_id: string;
+  role: MemberRole;
+  token: string;
+  status: InviteStatus;
+  accepted_by: string | null;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface TripMemberWithUser extends TripMember {
+  users: Pick<User, "id" | "name" | "avatar_url" | "email">;
+}
+
+export interface PresenceMember {
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  current_stop_id: string | null;
+}
+
+export interface PlaceResult {
+  place_id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  address: string;
+  rating: number | null;
+  photo_url: string | null;
+  types: string[];
+  opening_hours?: { open_now: boolean };
+}
+
+export interface PlaceDetails extends PlaceResult {
+  website: string | null;
+  phone: string | null;
 }
