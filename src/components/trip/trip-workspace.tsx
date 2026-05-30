@@ -148,6 +148,8 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
         onClose={() => setDrawerOpen(false)}
         onSave={handleSaveStop}
         onDelete={handleDeleteStop}
+        tripId={tripId}
+        onPhotosUpdated={refetch}
       />
 
       <AddStopDialog

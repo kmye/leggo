@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { StopPhotos } from "./stop-photos";
 import type { StopWithPhotos, StopCategory, StopLink, BookingReference, CustomField } from "@/lib/types";
 
 interface StopDrawerProps {
@@ -27,9 +28,11 @@ interface StopDrawerProps {
   onClose: () => void;
   onSave: (stopId: string, updates: Partial<StopWithPhotos>) => void;
   onDelete: (stopId: string) => void;
+  tripId: string;
+  onPhotosUpdated: () => void;
 }
 
-export function StopDrawer({ stop, open, onClose, onSave, onDelete }: StopDrawerProps) {
+export function StopDrawer({ stop, open, onClose, onSave, onDelete, tripId, onPhotosUpdated }: StopDrawerProps) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<StopCategory>("other");
   const [timeStart, setTimeStart] = useState("");
@@ -154,6 +157,16 @@ export function StopDrawer({ stop, open, onClose, onSave, onDelete }: StopDrawer
               <Input value={currency} onChange={(e) => setCurrency(e.target.value)} />
             </div>
           </div>
+
+          <Separator />
+
+          {/* Photos */}
+          <StopPhotos
+            photos={stop.stop_photos}
+            stopId={stop.id}
+            tripId={tripId}
+            onUpdate={onPhotosUpdated}
+          />
 
           <Separator />
 
