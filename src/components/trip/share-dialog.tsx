@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,9 +28,14 @@ export function ShareDialog({
   onRevoke,
 }: ShareDialogProps) {
   const [copying, setCopying] = useState(false);
+  const [origin, setOrigin] = useState("");
 
-  const shareUrl = shareToken
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/share/${tripId}?token=${shareToken}`
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const shareUrl = shareToken && origin
+    ? `${origin}/share/${tripId}?token=${shareToken}`
     : null;
 
   const handleCopy = async () => {

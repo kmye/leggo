@@ -26,7 +26,7 @@ export function TripCard({ trip }: { trip: Trip }) {
             {trip.description || "No description"}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            Updated {new Date(trip.updated_at).toLocaleDateString()}
+            Updated {trip.updated_at.slice(0, 10)}
           </p>
         </CardContent>
       </Card>
