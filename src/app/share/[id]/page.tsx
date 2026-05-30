@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { MapContainer } from "@/components/map/map-container";
+import { ReadOnlyMap } from "@/components/map/read-only-map";
 import { Badge } from "@/components/ui/badge";
 import type { TripWithDays, StopWithPhotos, StopCategory } from "@/lib/types";
 
@@ -66,12 +66,7 @@ export default async function SharePage({
 
       {/* Map */}
       <div className="h-[400px] border-b">
-        <MapContainer
-          stops={allStops}
-          selectedStopId={null}
-          onStopClick={() => {}}
-          onMapClick={() => {}}
-        />
+        <ReadOnlyMap stops={allStops} />
       </div>
 
       {/* Itinerary */}
