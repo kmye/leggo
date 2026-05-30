@@ -1,7 +1,6 @@
 export type TripStatus = "planning" | "active" | "completed";
 export type MemberRole = "owner" | "editor" | "viewer";
 export type StopCategory = "food" | "sightseeing" | "hotel" | "transport" | "shopping" | "other";
-export type MapProvider = "baidu" | "mapbox";
 
 export interface User {
   id: string;
