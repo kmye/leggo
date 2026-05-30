@@ -5,6 +5,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { Trash2 } from "lucide-react";
 import { StopItem } from "./stop-item";
 import { Button } from "@/components/ui/button";
 import type { DayWithStops } from "@/lib/types";
@@ -48,13 +49,14 @@ export function DaySection({
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="size-7"
             onClick={(e) => {
               e.stopPropagation();
               onRemoveDay(day.id);
             }}
           >
-            Remove
+            <Trash2 className="size-4" />
           </Button>
           <span className="text-muted-foreground text-xs">
             {collapsed ? "+" : "-"}
