@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("users").upsert(
+        const { data: upsertData, error: upsertError } = await supabase.from("users").upsert(
           {
             id: user.id,
             email: user.email!,
@@ -19,7 +19,8 @@ export async function GET(request: Request) {
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
           },
           { onConflict: "id" }
-        );
+        ).select();
+        console.log("[callback] user upsert:", { userId: user.id, upsertData, upsertError });
       }
       return NextResponse.redirect(`${origin}/dashboard`);
     }
