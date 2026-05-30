@@ -24,7 +24,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <p className="text-sm text-muted-foreground">
-          Supports Baidu Maps for China and Mapbox for international destinations.
+          Powered by Google Maps.
         </p>
       </div>
     </div>
