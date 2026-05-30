@@ -30,6 +30,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/invite") ||
     (request.nextUrl.pathname.startsWith("/trip") && !request.nextUrl.pathname.includes("/share"));
 
   if (!user && isProtectedRoute) {
