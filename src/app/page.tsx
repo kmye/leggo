@@ -26,13 +26,6 @@ export default async function HomePage() {
         <p className="text-sm text-muted-foreground">
           Powered by Google Maps.
         </p>
-        <a href="https://www.buymeacoffee.com/kmye" target="_blank" rel="noopener noreferrer">
-          <img
-            src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png"
-            alt="Buy Me a Coffee"
-            style={{ height: "60px", width: "217px" }}
-          />
-        </a>
       </div>
     </div>
   );

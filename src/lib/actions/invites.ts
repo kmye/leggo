@@ -51,42 +51,23 @@ export async function acceptInvite(token: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?redirect=/invite/" + token);
 
-  const { data: invite, error: fetchError } = await supabase
-    .from("trip_invites")
-    .select("*")
-    .eq("token", token)
-    .eq("status", "pending")
-    .single();
+  const { data: tripId, error } = await supabase.rpc("accept_trip_invite", {
+    p_token: token,
+  });
 
-  if (fetchError || !invite) {
-    return { error: "Invite not found or already used" };
-  }
-
-  if (new Date(invite.expires_at) < new Date()) {
-    return { error: "Invite has expired" };
-  }
-
-  const { error: memberError } = await supabase
-    .from("trip_members")
-    .insert({
-      trip_id: invite.trip_id,
-      user_id: user.id,
-      role: invite.role,
-    });
-
-  if (memberError) {
-    if (memberError.code === "23505") {
-      redirect(`/trip/${invite.trip_id}`);
+  if (error) {
+    if (error.message.includes("already")) {
+      const { data: invite } = await supabase
+        .from("trip_invites")
+        .select("trip_id")
+        .eq("token", token)
+        .single();
+      if (invite) redirect(`/trip/${invite.trip_id}`);
     }
-    return { error: memberError.message };
+    return { error: error.message };
   }
 
-  await supabase
-    .from("trip_invites")
-    .update({ status: "accepted", accepted_by: user.id })
-    .eq("id", invite.id);
-
-  redirect(`/trip/${invite.trip_id}`);
+  redirect(`/trip/${tripId}`);
 }
 
 export async function getMembers(tripId: string) {
