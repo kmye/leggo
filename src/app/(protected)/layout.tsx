@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Navbar } from "@/components/navbar";
 
 export default async function ProtectedLayout({
   children,
@@ -24,5 +25,16 @@ export default async function ProtectedLayout({
   ).select();
   console.log("[protected-layout] user upsert:", { userId: user.id, upsertData, upsertError });
 
-  return <>{children}</>;
+  const navUser = {
+    name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+    email: user.email!,
+    avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+  };
+
+  return (
+    <>
+      <Navbar user={navUser} />
+      <main className="flex-1">{children}</main>
+    </>
+  );
 }
