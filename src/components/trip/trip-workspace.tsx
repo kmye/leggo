@@ -29,7 +29,7 @@ interface TripWorkspaceProps {
 
 export function TripWorkspace({ tripId, currentUser, isOwner }: TripWorkspaceProps) {
   const { trip, loading, refetch, updateTrip, updateStatus, addDay, removeDay, generateShareToken, revokeShareToken, onlineMembers, updatePresenceStop } = useRealtimeTrip(tripId, currentUser);
-  const { addStop, updateStop, deleteStop, reorderStops } = useStops();
+  const { addStop, updateStop, deleteStop, reorderStops, moveStopToDay } = useStops();
 
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -179,6 +179,35 @@ export function TripWorkspace({ tripId, currentUser, isOwner }: TripWorkspacePro
     refetch();
   };
 
+  const handleMoveStopToDay = async (
+    stopId: string,
+    sourceDayId: string,
+    destDayId: string,
+    newIndex: number
+  ) => {
+    if (!trip) return;
+
+    const sourceDay = trip.trip_days.find((d) => d.id === sourceDayId);
+    const destDay = trip.trip_days.find((d) => d.id === destDayId);
+    if (!sourceDay || !destDay) return;
+
+    await moveStopToDay(stopId, destDayId, newIndex);
+
+    const remainingSourceIds = sourceDay.stops
+      .filter((s) => s.id !== stopId)
+      .map((s) => s.id);
+    if (remainingSourceIds.length > 0) {
+      await reorderStops(sourceDayId, remainingSourceIds);
+    }
+
+    const destStopIds = destDay.stops.map((s) => s.id);
+    const newDestOrder = [...destStopIds];
+    newDestOrder.splice(newIndex, 0, stopId);
+    await reorderStops(destDayId, newDestOrder);
+
+    refetch();
+  };
+
   const handleAddDay = async () => {
     await addDay();
   };
@@ -232,6 +261,7 @@ export function TripWorkspace({ tripId, currentUser, isOwner }: TripWorkspacePro
               onAddDay={handleAddDay}
               onRemoveDay={handleRemoveDay}
               onReorderStops={handleReorderStops}
+              onMoveStopToDay={handleMoveStopToDay}
             />
           )}
         </div>
@@ -257,6 +287,7 @@ export function TripWorkspace({ tripId, currentUser, isOwner }: TripWorkspacePro
           onAddDay={handleAddDay}
           onRemoveDay={handleRemoveDay}
           onReorderStops={handleReorderStops}
+          onMoveStopToDay={handleMoveStopToDay}
         />
       </div>
 

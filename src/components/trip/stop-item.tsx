@@ -32,12 +32,16 @@ interface StopItemProps {
 }
 
 export function StopItem({ stop, index, isSelected, onClick }: StopItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: stop.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: stop.id,
+      data: { type: "stop", dayId: stop.day_id },
+    });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.4 : undefined,
   };
 
   return (

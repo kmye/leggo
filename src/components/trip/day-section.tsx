@@ -5,6 +5,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import { Trash2 } from "lucide-react";
 import { StopItem } from "./stop-item";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,10 @@ export function DaySection({
   onRemoveDay,
 }: DaySectionProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { setNodeRef, isOver } = useDroppable({
+    id: day.id,
+    data: { type: "day", dayId: day.id },
+  });
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -65,7 +70,10 @@ export function DaySection({
       </div>
 
       {!collapsed && (
-        <div className="p-3 space-y-2">
+        <div
+          ref={setNodeRef}
+          className={`p-3 space-y-2 transition-colors ${isOver ? "ring-2 ring-primary/30 bg-primary/5 rounded-b-lg" : ""}`}
+        >
           <SortableContext
             items={day.stops.map((s) => s.id)}
             strategy={verticalListSortingStrategy}
