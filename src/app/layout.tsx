@@ -20,8 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">
-        {children}
+      <head>
         <Script
           src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
           data-name="BMC-Widget"
@@ -33,8 +32,11 @@ export default function RootLayout({
           data-position="Right"
           data-x_margin="18"
           data-y_margin="18"
-          strategy="lazyOnload"
+          strategy="beforeInteractive"
         />
+      </head>
+      <body className="min-h-full flex flex-col font-sans">
+        {children}
       </body>
     </html>
   );
