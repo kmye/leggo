@@ -120,9 +120,11 @@ export function TripHeader({
         </div>
         <div className="flex items-center gap-2">
           <PresenceAvatars members={onlineMembers} />
-          <Button variant="ghost" size="icon" className="size-8" onClick={onOpenDiscovery} title="Discover places">
-            <Compass className="size-4" />
-          </Button>
+          {process.env.NEXT_PUBLIC_ENABLE_DISCOVERY === "true" && (
+            <Button variant="ghost" size="icon" className="size-8" onClick={onOpenDiscovery} title="Discover places">
+              <Compass className="size-4" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="size-8" onClick={onOpenMembers} title="Members">
             <Users className="size-4" />
           </Button>
