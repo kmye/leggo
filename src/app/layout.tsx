@@ -23,16 +23,16 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         {children}
         <Script
-          src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
-          data-name="bmc-button"
-          data-slug="kmye"
+          src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
+          data-name="BMC-Widget"
+          data-cfasync="false"
+          data-id="kmye"
+          data-description="Support me on Buy me a coffee!"
+          data-message="Thankew for buying me kopi"
           data-color="#5F7FFF"
-          data-emoji=""
-          data-font="Cookie"
-          data-text="Buy me a coffee"
-          data-outline-color="#000000"
-          data-font-color="#ffffff"
-          data-coffee-color="#FFDD00"
+          data-position="Right"
+          data-x_margin="18"
+          data-y_margin="18"
           strategy="lazyOnload"
         />
       </body>
