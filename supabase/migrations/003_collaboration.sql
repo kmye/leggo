@@ -59,10 +59,22 @@ drop policy if exists "Photos readable via share token" on public.stop_photos;
 drop policy if exists "Trip members managed by trip owner" on public.trip_members;
 
 -- Rewritten policies: trips
+-- NOTE: We cannot call user_can_access_trip() here because it queries trip_members,
+-- whose "owner can manage" policy queries trips — creating a circular RLS dependency.
+-- Instead, inline the trip_members check and bypass RLS on trip_members via a helper.
+create or replace function public.is_trip_member(p_trip_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.trip_members where trip_id = p_trip_id and user_id = auth.uid()
+  );
+end;
+$$ language plpgsql security definer stable;
+
 create policy "Trips: owner or member can read"
   on public.trips for select using (
     auth.uid() = owner_id
-    or exists (select 1 from public.trip_members where trip_id = id and user_id = auth.uid())
+    or public.is_trip_member(id)
     or share_token is not null
   );
 
@@ -178,10 +190,19 @@ create policy "Photos: editor can delete"
   );
 
 -- Policies: trip_members
-create policy "Trip members: owner can manage"
-  on public.trip_members for all using (
-    exists (select 1 from public.trips where id = trip_id and owner_id = auth.uid())
+-- Use a SECURITY DEFINER function to check trip ownership without triggering
+-- trips' RLS (which itself checks trip_members — circular dependency).
+create or replace function public.is_trip_owner(p_trip_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.trips where id = p_trip_id and owner_id = auth.uid()
   );
+end;
+$$ language plpgsql security definer stable;
+
+create policy "Trip members: owner can manage"
+  on public.trip_members for all using (public.is_trip_owner(trip_id));
 
 create policy "Trip members: member can read own"
   on public.trip_members for select using (user_id = auth.uid());
@@ -190,9 +211,7 @@ create policy "Trip members: member can read own"
 alter table public.trip_invites enable row level security;
 
 create policy "Invites: owner can manage"
-  on public.trip_invites for all using (
-    exists (select 1 from public.trips where id = trip_id and owner_id = auth.uid())
-  );
+  on public.trip_invites for all using (public.is_trip_owner(trip_id));
 
 create policy "Invites: anyone can read by token"
   on public.trip_invites for select using (true);
